@@ -46,6 +46,7 @@ function decryptText(value) {
 function decryptMessage(row) {
   return {
     id: row.id,
+    client_id: row.client_id || null,
     sender_name: decryptText(row.sender_name),
     body: decryptText(row.body),
     created_at: row.created_at,

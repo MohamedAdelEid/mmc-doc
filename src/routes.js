@@ -121,9 +121,24 @@ router.post('/messages/clear', async (req, res) => {
   }
 });
 
+function normalizeClientId(value) {
+  const cleaned = String(value || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .slice(0, 64);
+  if (cleaned.length >= 8) return cleaned;
+  return null;
+}
+
 router.post('/messages', async (req, res) => {
   try {
-    const { code, password, sender_name: senderName, body } = req.body || {};
+    const {
+      code,
+      password,
+      sender_name: senderName,
+      body,
+      client_id: clientIdRaw,
+    } = req.body || {};
     const result = await assertRoomAccess(code, password);
     if (result.error) {
       return res.status(result.status).json({ ok: false, error: result.error });
@@ -131,21 +146,24 @@ router.post('/messages', async (req, res) => {
 
     const name = String(senderName || '').trim().slice(0, 64);
     const text = String(body || '').trim().slice(0, 2000);
+    const clientId = normalizeClientId(clientIdRaw);
     if (!name) return badRequest(res, 'invalid_sender');
     if (!text) return badRequest(res, 'invalid_body');
+    if (!clientId) return badRequest(res, 'invalid_client');
 
     const [insert] = await pool.execute(
-      `INSERT INTO messages (room_id, sender_name, body)
-       VALUES (:room_id, :sender_name, :body)`,
+      `INSERT INTO messages (room_id, client_id, sender_name, body)
+       VALUES (:room_id, :client_id, :sender_name, :body)`,
       {
         room_id: result.room.id,
+        client_id: clientId,
         sender_name: encryptText(name),
         body: encryptText(text),
       },
     );
 
     const [rows] = await pool.execute(
-      `SELECT id, sender_name, body, created_at
+      `SELECT id, client_id, sender_name, body, created_at
        FROM messages WHERE id = :id LIMIT 1`,
       { id: insert.insertId },
     );
@@ -170,7 +188,7 @@ router.get('/messages', async (req, res) => {
 
     const after = Number(afterId || 0);
     const [rows] = await pool.execute(
-      `SELECT id, sender_name, body, created_at
+      `SELECT id, client_id, sender_name, body, created_at
        FROM messages
        WHERE room_id = :room_id AND id > :after_id
        ORDER BY id ASC

@@ -1,5 +1,6 @@
 const SECRET = 'mmcdoc';
 const POLL_MS = 2000;
+const CLIENT_KEY = 'mmc_doc_client_id';
 
 const HOLD_MS = 900;
 const TAP_NEED = 7;
@@ -12,7 +13,38 @@ const state = {
   holdTimer: null,
   revisionTaps: 0,
   revisionTapTimer: null,
+  clientId: null,
 };
+
+state.clientId = getClientId();
+
+function createClientId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return `c_${window.crypto.randomUUID().replace(/-/g, '')}`.slice(0, 64);
+  }
+  return (
+    'c_' +
+    Math.random().toString(36).slice(2) +
+    Date.now().toString(36) +
+    Math.random().toString(36).slice(2)
+  ).slice(0, 64);
+}
+
+function getClientId() {
+  try {
+    let id = String(localStorage.getItem(CLIENT_KEY) || '')
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]/g, '')
+      .slice(0, 64);
+    if (id.length < 8) {
+      id = createClientId();
+      localStorage.setItem(CLIENT_KEY, id);
+    }
+    return id;
+  } catch {
+    return createClientId();
+  }
+}
 
 const gate = document.getElementById('gate');
 const roomEl = document.getElementById('room');
@@ -55,6 +87,7 @@ function errorMessage(code) {
     unauthorized: 'Access phrase rejected.',
     invalid_sender: 'Display name required.',
     invalid_body: 'Message required.',
+    invalid_client: 'Device id missing. Refresh and try again.',
     deleted: 'This session was deleted.',
     server_error: 'Temporary server issue.',
   };
@@ -93,12 +126,22 @@ function switchTab(name) {
   createForm.classList.toggle('hidden', name !== 'create');
 }
 
+function isMine(msg) {
+  if (!state.session) return false;
+  if (msg.client_id && state.clientId) {
+    return msg.client_id === state.clientId;
+  }
+  return msg.sender_name === state.session.senderName;
+}
+
 function renderMessage(msg) {
-  const mine = state.session && msg.sender_name === state.session.senderName;
+  const mine = isMine(msg);
   const wrap = document.createElement('article');
-  wrap.className = mine ? 'msg mine' : 'msg';
+  wrap.className = mine ? 'msg mine' : 'msg theirs';
   wrap.innerHTML = '<p class="msg-name"></p><p class="msg-body"></p>';
-  wrap.querySelector('.msg-name').textContent = msg.sender_name;
+  wrap.querySelector('.msg-name').textContent = mine
+    ? `You · ${msg.sender_name}`
+    : msg.sender_name;
   wrap.querySelector('.msg-body').textContent = msg.body;
   messagesEl.appendChild(wrap);
 }
@@ -315,12 +358,14 @@ sendForm.addEventListener('submit', async (event) => {
   const input = document.getElementById('message-input');
   const body = String(input.value || '').trim();
   if (!body) return;
+  state.clientId = getClientId();
   const { res, data } = await api('/api/messages', {
     method: 'POST',
     body: JSON.stringify({
       code: state.session.code,
       password: state.session.password,
       sender_name: state.session.senderName,
+      client_id: state.clientId,
       body,
     }),
   });
