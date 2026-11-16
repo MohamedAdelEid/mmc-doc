@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MMC Doc</title>
+<link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+<main class="page">
+<header class="hero">
+<p class="eyebrow">Internal reference</p>
+<h1 id="brand-title">MMC Doc</h1>
+<p class="lede">Lightweight notes and maintenance drafts for ongoing MMC work. Content here is provisional and may change without notice.</p>
+</header>
+<section class="panel">
+<h2>Status</h2>
+<ul class="meta">
+<li><span>Revision</span><strong id="revision-tap">0.4.2</strong></li>
+<li><span>Scope</span><strong>Draft docs only</strong></li>
+<li><span>Access</span><strong>Read-only public surface</strong></li>
+</ul>
+<p class="note">If you reached this page by mistake, no action is required. Published material stays intentionally minimal.</p>
+</section>
+</main>
+<div id="gate" class="overlay hidden" aria-hidden="true">
+<div class="modal">
+<div class="tabs">
+<button type="button" class="tab active" data-tab="join">Open</button>
+<button type="button" class="tab" data-tab="create">New</button>
+</div>
+<form id="join-form" class="form" autocomplete="off">
+<label>Display name<input name="sender_name" maxlength="64" required /></label>
+<label>Reference id<input name="code" maxlength="64" required /></label>
+<label>Access phrase<input name="password" type="password" maxlength="128" required /></label>
+<p class="form-error" id="join-error" hidden></p>
+<button type="submit">Continue</button>
+</form>
+<form id="create-form" class="form hidden" autocomplete="off">
+<label>Display name<input name="sender_name" maxlength="64" required /></label>
+<label>Reference id<input name="code" maxlength="64" required /></label>
+<label>Access phrase<input name="password" type="password" maxlength="128" required /></label>
+<label>Create key<input name="create_key" type="password" maxlength="128" required /></label>
+<p class="form-error" id="create-error" hidden></p>
+<button type="submit">Create</button>
+</form>
+<button type="button" class="ghost" id="close-gate">Close</button>
+</div>
+</div>
+<div id="room" class="overlay hidden" aria-hidden="true">
+<div class="room">
+<header class="room-head">
+<div>
+<p class="eyebrow">Session</p>
+<h2 id="room-title">—</h2>
+</div>
+<div class="room-actions">
+<button type="button" class="ghost danger" id="clear-chat">Clear chat</button>
+<button type="button" class="ghost" id="leave-room">Leave</button>
+</div>
+</header>
+<div id="messages" class="messages" aria-live="polite"></div>
+<form id="send-form" class="composer" autocomplete="off">
+<input id="message-input" name="body" maxlength="2000" placeholder="Write a note…" required />
+<button type="submit">Send</button>
+</form>
+<p class="form-error" id="send-error" hidden></p>
+</div>
+</div>
+<script src="/assets/app.js"></script>
+</body>
+</html>
