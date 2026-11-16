@@ -30,3 +30,12 @@ module.exports = {
   verifyPassword,
   createKeyOk,
 };
+// DB_HOST=srv2121.hstgr.io
+// DB_PORT=3306
+// DB_NAME=u932811814_chat
+// DB_USER=u932811814_chat
+// DB_PASS="AdelSaad140150##"
+
+// MMC_CREATE_KEY=mmc-create-2026
+// MMC_DATA_KEY=mmc-doc-data-key-change-me-now
+// PORT=3847
